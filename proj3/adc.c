@@ -26,6 +26,7 @@ void Setup_ADC(int v_h, int v_l) {
     upCount = 0;
     dCount = 0;
     freqAvg = 0;
+    freqPos = 0;
 
     for (i = 0; i < NUM_FREQ; i++) {
         freq[i] = 0;
@@ -57,9 +58,9 @@ void Setup_ADC(int v_h, int v_l) {
 
 void ADC_RequestNextSample() {
     //start sample
-    if (adcflag != F_ADC_REQUEST) {
+    //if (adcflag != F_ADC_REQUEST) {
         ADC14->CTL0 |= ADC14_CTL0_ENC | ADC14_CTL0_SC;
-    }
+    //}
     adcflag = F_ADC_REQUEST;
 }
 
@@ -69,6 +70,31 @@ void ADC14_IRQHandler() {
     lastRead[pos] = ADC14->MEM[0]; //output
     avg += lastRead[pos];
     rms += lastRead[pos] * lastRead[pos];
+    int prev = pos == 0 ? 3999 : pos - 1;
+    //in up mode
+    if (upCount > 0) {
+        if (lastRead[pos] + THRESH > lastREAD[prev]) {
+            upCount++;
+        } else {
+            freqAvg -= freq[freqPos];
+            freq[freqPos] = upCount;
+            freqAvg += freq[freqPos];
+            upCount = 0;
+            dCount = 1;
+            freqPos = ( freqPos + 1 ) % NUM_FREQ;
+        }
+    } else { //down mode
+        if (lastRead[pos] < lastREAD[prev] + THRESH) {
+            dCount++;
+        } else {
+            freqAvg -= freq[freqPos];
+            freq[freqPos] = dCount;
+            freqAvg += freq[freqPos];
+            dCount = 0;
+            upCount = 1;
+            freqPos = ( freqPos + 1 ) % NUM_FREQ;
+        }
+    }
     pos = ( pos + 1 ) % SAMPLES;
 
     adcflag =F_ADC_READ_ME;
@@ -86,6 +112,12 @@ unsigned int ADC_GetRawValue() {
 unsigned int ADC_GetRawValueAC() {
     adcflag = F_ADC_NO_OP;
     return sqrt(rms / SAMPLES);
+}
+
+unsigned int ADC_GetRawValueOhm() {
+    adcflag = F_ADC_NO_OP;
+    int v = lastRead[pos - 1 > 0 ? pos -1 : 3999] * CAL;
+    return ((3300 + v) * RESISTOR) / v;
 }
 
 void ADC_GetFormatedDC(char* value) {
@@ -147,6 +179,22 @@ void ADC_GetFormatedFreq(char* value) {
     adcflag = F_ADC_NO_OP;
     unsigned long long conversion = freqAvg;
     int loc = 3;
+    while (loc >= 0 && conversion > 0) {
+        value[loc] = '0' + (conversion % 10);
+        conversion /= 10;
+        loc--;
+    }
+}
+
+void ADC_GetFormatedOhm(char* value) {
+    value[0] = ' ';
+    value[1] = ' ';
+    value[2] = ' ';
+    adcflag = F_ADC_NO_OP;
+    int v = lastRead[pos == 0 ? 3999 : pos - 1] * CAL;
+
+    unsigned int conversion =  ((3300 + v) * RESISTOR) / (v + 1);
+    int loc = 5;
     while (loc >= 0 && conversion > 0) {
         value[loc] = '0' + (conversion % 10);
         conversion /= 10;

@@ -27,6 +27,8 @@ void Draw_Background() {
     UART_String("|  Calc-RMS Meter                                          |", 60, 1);
     UART_String("| 0.0V   | 0.5V   | 1.0V   | 1.5V   | 2.0V   | 2.5V   | 3V |", 60, 1);
     UART_String("|                                                          |", 60, 1);
+    UART_String("|----------------------------------------------------------|", 60, 1);
+    UART_String("| Resistance:                                              |", 60, 1);
     UART_String("|__________________________________________________________|", 60, 1);
 
 //    todo resistor maybe?
@@ -100,4 +102,13 @@ void Refresh_Display() {
         UART0Tx('\261');
     else if (i > 101)
         UART0Tx('\260');
+
+
+    //Resistance
+    UART_String("\033[16;15H", 8, 0);
+    ADC_GetFormatedOhm(arr);
+    for (i = 0; i < 6; i++) {
+        UART0Tx(arr[i]);
+    }
+    UART0Tx('\352');
 }

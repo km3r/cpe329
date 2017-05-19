@@ -37,7 +37,7 @@ void main(void)
     while (1) {
         Refresh_Display();
         i++;
-        if (i%5000 == 0)  {
+        if (i%1000 == 0)  {
             Draw_Background();
         }
     }
