@@ -17,6 +17,7 @@ void clearFlag();
 int readVal();
 unsigned char UART0Rx(void);
 unsigned char UART0Tx(unsigned char c);
+void UART_String(char * str, int len, int newline);
 void EUSCIA0_IRQHandler(void);
 
 #endif /* UART_H_ */

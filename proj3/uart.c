@@ -60,6 +60,18 @@ unsigned char UART0Tx(unsigned char c) {
     return c;
 }
 
+void UART_String(char * str, int len, int newline) {
+    int i;
+    for (i = 0; i < len; i++) {
+        UART0Tx(str[i]);
+    }
+    if (newline == 1) {
+        UART0Tx('\033');
+        UART0Tx('E');
+    }
+}
+
+
 void EUSCIA0_IRQHandler(void) {
     char c = EUSCI_A0->RXBUF;
 

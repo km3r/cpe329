@@ -7,14 +7,33 @@
 
 #include "adc.h"
 #include "msp.h"
+#include <math.h>
 
 void Setup_ADC(int v_h, int v_l) {
+
+    int i;
 
     vL = v_l;
     vH = v_h;
     adcflag = F_ADC_NO_OP;
     pos = 0;
     avg = 0;
+
+    upVal[0] = -1;
+    dVal[0] = -1;
+    upVal[1] = -1;
+    dVal[1] = -1;
+    upCount = 0;
+    dCount = 0;
+    freqAvg = 0;
+
+    for (i = 0; i < NUM_FREQ; i++) {
+        freq[i] = 0;
+    }
+
+    for (i = 0; i < SAMPLES; i++) {
+        lastRead[i] = 0;
+    }
 
     P5->SEL0 |= BIT5;
     P5->SEL1 |= BIT5;
@@ -45,9 +64,12 @@ void ADC_RequestNextSample() {
 }
 
 void ADC14_IRQHandler() {
+    avg -= lastRead[pos];
+    rms -= lastRead[pos] * lastRead[pos];
     lastRead[pos] = ADC14->MEM[0]; //output
-    avg = avg * 7999 / 8000 + lastRead[pos] / 800;
-    pos = ( pos + 1 ) % 8000;
+    avg += lastRead[pos];
+    rms += lastRead[pos] * lastRead[pos];
+    pos = ( pos + 1 ) % SAMPLES;
 
     adcflag =F_ADC_READ_ME;
 }
@@ -58,19 +80,76 @@ int ADC_CheckReady() {
 
 unsigned int ADC_GetRawValue() {
     adcflag = F_ADC_NO_OP;
-    return lastRead[0];
+    return avg / SAMPLES;
 }
 
-void ADC_GetFormatedValue(char* value) {
+unsigned int ADC_GetRawValueAC() {
     adcflag = F_ADC_NO_OP;
-//    unsigned long long conversion = lastRead[pos] * CAL;
-    unsigned long long conversion = avg * CAL /10;
+    return sqrt(rms / SAMPLES);
+}
+
+void ADC_GetFormatedDC(char* value) {
+    adcflag = F_ADC_NO_OP;
+    unsigned long long conversion = avg / SAMPLES * CAL /10;
     int loc = 5;
     value[2] = '.';
     while (loc >= 0) {
         value[loc] = '0' + (conversion % 10);
         conversion /= 10;
         if (loc == 3) loc--;
+        loc--;
+    }
+}
+
+void ADC_GetFormatedAC(char* value) {
+    adcflag = F_ADC_NO_OP;
+    unsigned long long conversion = sqrt(rms / SAMPLES) * CAL /10;
+    int loc = 5;
+    value[2] = '.';
+    while (loc >= 0) {
+        value[loc] = '0' + (conversion % 10);
+        conversion /= 10;
+        if (loc == 3) loc--;
+        loc--;
+    }
+}
+
+void ADC_GetFormatedAC_Calc(char* value) {
+    adcflag = F_ADC_NO_OP;
+    unsigned long long conversion = (sqrt(rms / SAMPLES) - avg / SAMPLES) * CAL /10;
+    int loc = 5;
+    value[2] = '.';
+    while (loc >= 0) {
+        value[loc] = '0' + (conversion % 10);
+        conversion /= 10;
+        if (loc == 3) loc--;
+        loc--;
+    }
+}
+
+void ADC_GetFormatedVpp(char* value) {
+    adcflag = F_ADC_NO_OP;
+    unsigned long long conversion = (max - min) * CAL /10;
+    int loc = 5;
+    value[2] = '.';
+    while (loc >= 0) {
+        value[loc] = '0' + (conversion % 10);
+        conversion /= 10;
+        if (loc == 3) loc--;
+        loc--;
+    }
+}
+
+void ADC_GetFormatedFreq(char* value) {
+    value[0] = ' ';
+    value[1] = ' ';
+    value[2] = ' ';
+    adcflag = F_ADC_NO_OP;
+    unsigned long long conversion = freqAvg;
+    int loc = 3;
+    while (loc >= 0 && conversion > 0) {
+        value[loc] = '0' + (conversion % 10);
+        conversion /= 10;
         loc--;
     }
 }
