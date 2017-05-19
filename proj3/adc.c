@@ -19,10 +19,7 @@ void Setup_ADC(int v_h, int v_l) {
     pos = 0;
     avg = 0;
 
-    upVal[0] = -1;
-    dVal[0] = -1;
-    upVal[1] = -1;
-    dVal[1] = -1;
+
     upCount = 0;
     dCount = 0;
     freqAvg = 0;
@@ -49,7 +46,7 @@ void Setup_ADC(int v_h, int v_l) {
     // int enable
     ADC14->IER0 |= ADC14_IER0_IE0;
 
-    NVIC->ISER[0] |= 1 << ((ADC14_IRQn) & 31);
+    NVIC_EnableIRQ(ADC14_IRQn);
 
     //wake on isr exit
     SCB->SCR &= ~SCB_SCR_SLEEPONEXIT_Msk;
@@ -66,11 +63,23 @@ void ADC_RequestNextSample() {
 
 void ADC14_IRQHandler() {
     avg -= lastRead[pos];
-    rms -= lastRead[pos] * lastRead[pos];
+    rms -= (lastRead[pos]/10) * (lastRead[pos]/10);
     lastRead[pos] = ADC14->MEM[0]; //output
     avg += lastRead[pos];
-    rms += lastRead[pos] * lastRead[pos];
-    int prev = pos == 0 ? 3999 : pos - 1;
+    rms += (lastRead[pos]/10) * (lastRead[pos]/10);
+    int prev = pos - 1;
+
+    if (max[1] < lastRead[pos]) max[1] = lastRead[pos];
+    if (min[1] > lastRead[pos]) min[1] = lastRead[pos];
+
+    if (pos == 0) {
+        prev = 3999;
+        max[0] = max[1];
+        min[0] = min[1];
+        max[1] = lastRead[pos];
+        min[1] = lastRead[pos];
+    }
+
     //in up mode
     if (upCount > 0) {
         if (lastRead[pos] + THRESH > lastRead[prev]) {
@@ -106,7 +115,7 @@ int ADC_CheckReady() {
 
 unsigned int ADC_GetRawValue() {
     adcflag = F_ADC_NO_OP;
-    return lastRead[pos];
+    return avg / SAMPLES;
 }
 
 unsigned int ADC_GetRawValueAC() {
@@ -135,7 +144,8 @@ void ADC_GetFormatedDC(char* value) {
 
 void ADC_GetFormatedAC(char* value) {
     adcflag = F_ADC_NO_OP;
-    unsigned long long conversion = sqrt(rms / SAMPLES) * CAL /10;
+    unsigned long long conversion = (rms / SAMPLES * CAL);
+    conversion = sqrt(conversion) * 10;
     int loc = 5;
     value[2] = '.';
     while (loc >= 0) {
@@ -148,7 +158,8 @@ void ADC_GetFormatedAC(char* value) {
 
 void ADC_GetFormatedAC_Calc(char* value) {
     adcflag = F_ADC_NO_OP;
-    unsigned long long conversion = (sqrt(rms / SAMPLES) - avg / SAMPLES) * CAL /10;
+    unsigned long long conversion = (rms / SAMPLES * CAL);
+    conversion = sqrt(conversion) * 10 - (avg / SAMPLES * CAL);
     int loc = 5;
     value[2] = '.';
     while (loc >= 0) {
@@ -161,7 +172,7 @@ void ADC_GetFormatedAC_Calc(char* value) {
 
 void ADC_GetFormatedVpp(char* value) {
     adcflag = F_ADC_NO_OP;
-    unsigned long long conversion = (max - min) * CAL /10;
+    unsigned long long conversion = (max[0] - min[0]) * CAL /10;
     int loc = 5;
     value[2] = '.';
     while (loc >= 0) {
@@ -177,23 +188,24 @@ void ADC_GetFormatedFreq(char* value) {
     value[1] = ' ';
     value[2] = ' ';
     adcflag = F_ADC_NO_OP;
-    unsigned long long conversion = freqAvg;
+    unsigned long long conversion = 40000/ freqAvg;
+    if (conversion < 250) conversion++;
     int loc = 3;
     while (loc >= 0 && conversion > 0) {
         value[loc] = '0' + (conversion % 10);
         conversion /= 10;
         loc--;
     }
-}
+}int maxCount;
 
 void ADC_GetFormatedOhm(char* value) {
     value[0] = ' ';
     value[1] = ' ';
     value[2] = ' ';
     adcflag = F_ADC_NO_OP;
-    int v = lastRead[pos == 0 ? 3999 : pos - 1] * CAL;
+    long long v = lastRead[pos == 0 ? 3999 : pos - 1] * CAL;
 
-    unsigned int conversion =  ((3300 + v) * RESISTOR) / (v + 1);
+    unsigned long long conversion =  ((3300 + v) * RESISTOR) / (v + 1) * 25 / 208000;
     int loc = 5;
     while (loc >= 0 && conversion > 0) {
         value[loc] = '0' + (conversion % 10);

@@ -16,7 +16,7 @@ void Timer_Setup() {
             TIMER_A_CTL_MC__UP |
             TIMER_A_CTL_ID__1;
 
-    NVIC->ISER[0] |= 1 << ((TA0_0_IRQn) & 31);
+    NVIC_EnableIRQ(TA0_0_IRQn);
 }
 
 void TA0_0_IRQHandler(void) {

@@ -28,15 +28,17 @@ void main(void)
     P3->DIR |= BIT2;
 
     Setup_UART();
-    Timer_Setup();
+    Setup_Multi();
     Setup_ADC(33,0);
-
-
+    Timer_Setup();
+    __enable_irq();
     int i = 0;
     Draw_Background();
     while (1) {
-        ADC_RequestNextSample();
-        Refresh_Display();
+        //ADC_RequestNextSample();
+        if (i%4 == 0) {
+            Refresh_Display();
+        }
         i++;
         if (i%1000 == 0)  {
             Draw_Background();

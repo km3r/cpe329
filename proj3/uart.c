@@ -6,14 +6,13 @@
  */
 
 #include "uart.h"
-
+#include "multi.h"
 #include "msp.h"
 
 void Setup_UART() {
     val = 0;
     statusFlag = 0;
 
-    __disable_irq();
 
     EUSCI_A0->CTLW0 |= EUSCI_A_CTLW0_SWRST;
     EUSCI_A0->MCTLW = 0;
@@ -26,7 +25,7 @@ void Setup_UART() {
     EUSCI_A0->IE |= EUSCI_A_IE_RXIE;
     //NVIC_SetPriority(EUSCIA0_IRQn, 4);
     NVIC_EnableIRQ(EUSCIA0_IRQn);
-    __enable_irq();
+
 }
 
 int readFlag() {
@@ -76,10 +75,9 @@ void EUSCIA0_IRQHandler(void) {
     char c = EUSCI_A0->RXBUF;
 
     if (c == '\r') {
-        UART0Tx(c);
-        c = '\n';
+        Store();
     }
 
-    while(!(EUSCI_A0->IFG & 0x02)) {}
-    EUSCI_A0->TXBUF = c;
+    //while(!(EUSCI_A0->IFG & 0x02)) {}
+    //EUSCI_A0->TXBUF = c;
 }

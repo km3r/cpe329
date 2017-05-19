@@ -16,23 +16,24 @@
 #define THRESH      100
 #define SAMPLES     4000
 #define NUM_FREQ    20
-#define RESISTOR    1995
+#define RESISTOR    194000
 
 int vL, vH, adcflag;
 unsigned int lastRead[SAMPLES];
 unsigned int pos;
 unsigned int avg;
-unsigned int rms;
+unsigned long long rms;
 
 int freq[20];
 int freqAvg;
 int freqPos;
-int upVal[2];
+
 int upCount;
-int dVal[2];
+
 int dCount;
-int max;
-int min;
+
+int max[2];
+int min[2];
 
 
 
