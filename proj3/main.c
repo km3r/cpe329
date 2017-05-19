@@ -35,6 +35,7 @@ void main(void)
     int i = 0;
     Draw_Background();
     while (1) {
+        ADC_RequestNextSample();
         Refresh_Display();
         i++;
         if (i%1000 == 0)  {

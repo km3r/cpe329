@@ -49,7 +49,7 @@ void Setup_ADC(int v_h, int v_l) {
     // int enable
     ADC14->IER0 |= ADC14_IER0_IE0;
 
-    NVIC->ISER[0] = 1 << ((ADC14_IRQn) & 31);
+    NVIC->ISER[0] |= 1 << ((ADC14_IRQn) & 31);
 
     //wake on isr exit
     SCB->SCR &= ~SCB_SCR_SLEEPONEXIT_Msk;
@@ -73,7 +73,7 @@ void ADC14_IRQHandler() {
     int prev = pos == 0 ? 3999 : pos - 1;
     //in up mode
     if (upCount > 0) {
-        if (lastRead[pos] + THRESH > lastREAD[prev]) {
+        if (lastRead[pos] + THRESH > lastRead[prev]) {
             upCount++;
         } else {
             freqAvg -= freq[freqPos];
@@ -84,7 +84,7 @@ void ADC14_IRQHandler() {
             freqPos = ( freqPos + 1 ) % NUM_FREQ;
         }
     } else { //down mode
-        if (lastRead[pos] < lastREAD[prev] + THRESH) {
+        if (lastRead[pos] < lastRead[prev] + THRESH) {
             dCount++;
         } else {
             freqAvg -= freq[freqPos];
@@ -106,7 +106,7 @@ int ADC_CheckReady() {
 
 unsigned int ADC_GetRawValue() {
     adcflag = F_ADC_NO_OP;
-    return avg / SAMPLES;
+    return lastRead[pos];
 }
 
 unsigned int ADC_GetRawValueAC() {

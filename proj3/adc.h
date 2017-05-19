@@ -16,7 +16,7 @@
 #define THRESH      100
 #define SAMPLES     4000
 #define NUM_FREQ    20
-#define RESISTOR    50000
+#define RESISTOR    1995
 
 int vL, vH, adcflag;
 unsigned int lastRead[SAMPLES];
