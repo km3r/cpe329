@@ -49,7 +49,7 @@ int main(void)
 
     InitEEPROM(EEPROM_ADDRESS);
 
-    //WriteEEPROM(0x0323, 0x26);
+    WriteEEPROM(0x0323, 0x26);
 
     for (i = 4000; i > 0; i--);    // Delay for EEPROM write cycle (5 ms)
 

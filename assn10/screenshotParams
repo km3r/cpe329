@@ -1,1 +1,3 @@
 (0x0323, 0x26);
+
+ack never recieved and it gets stuck waiting for it.
