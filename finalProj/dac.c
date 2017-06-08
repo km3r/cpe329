@@ -33,31 +33,22 @@ void Setup_DAC(void) {
 }
 
 void Drive_DAC(unsigned int level){
-  unsigned int DAC_Word = 0;
-  int i;
+    unsigned int DAC_Word = 0;
+    int i;
 
-  DAC_Word = (0x1000) | (level & 0x0FFF);   // 0x1000 sets DAC for Write
-                                            // to DAC, Gain = 2, /SHDN = 1
-                                            // and put 12-bit level value
-                                            // in low 12 bits.
-
-  P4->OUT &= ~BIT1;                                   // Clear P4.1 (drive /CS low on DAC)
-                                                      // Using a port output to do this for now
-
-  EUSCI_B0->TXBUF = (unsigned char) (DAC_Word >> 8);  // Shift upper byte of DAC_Word
-                                                      // 8-bits to right
-
-  while (!(EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG));              // USCI_A0 TX buffer ready?
-
-  EUSCI_B0->TXBUF = (unsigned char) (DAC_Word & 0x00FF);     // Transmit lower byte to DAC
-
-  while (!(EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG));      // Poll the TX flag to wait for completion
-
-  for(i = 50; i > 0; i--);                          // Delay 200 16 MHz SMCLK periods
-                                                     //to ensure TX is complete by SIMO
-
-  P4->OUT |= BIT1;                                   // Set P4.1   (drive /CS high on DAC)
-
-
-  return;
+    DAC_Word = (0x1000) | (level & 0x0FFF);   // 0x1000 sets DAC for Write
+                                              // to DAC, Gain = 2, /SHDN = 1
+                                              // and put 12-bit level value
+                                              // in low 12 bits.
+    P4->OUT &= ~BIT1;                                   // Clear P4.1 (drive /CS low on DAC)
+                                                        // Using a port output to do this for now
+    EUSCI_B0->TXBUF = (unsigned char) (DAC_Word >> 8);  // Shift upper byte of DAC_Word
+                                                        // 8-bits to right
+    while (!(EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG));              // USCI_A0 TX buffer ready?
+    EUSCI_B0->TXBUF = (unsigned char) (DAC_Word & 0x00FF);     // Transmit lower byte to DAC
+    while (!(EUSCI_B0->IFG & EUSCI_B_IFG_TXIFG));      // Poll the TX flag to wait for completion
+    for(i = 200; i > 0; i--);                          // Delay 200 16 MHz SMCLK periods
+                                                       //to ensure TX is complete by SIMO
+    P4->OUT |= BIT1;                                   // Set P4.1   (drive /CS high on DAC)
+    return;
 }

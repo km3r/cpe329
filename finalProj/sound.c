@@ -6,6 +6,7 @@
  */
 
 #include "sound.h"
+#include "dac.h"
 
 
 int sinwaveX[256] = {960,984,1007,1031,1054,1078,1101,1124,1147,1170,1193,1216,1239,
@@ -84,14 +85,16 @@ void Update_Wave(int waveNum, int freq, int period) {
 }
 
 void Sound_Go() {
+    int i = 0;
     while (1) {
+        i++;
+        Drive_DAC(sinwaveX[i%256]);
+
         NEXT_WAVE(0);
         NEXT_WAVE(1);
         NEXT_WAVE(2);
         NEXT_WAVE(3);
-        Drive_DAC( sinwaveX[wave[0][0]%256] / (wave[0][0]/256) +
-                   sinwaveX[wave[1][0]%256] / (wave[1][0]/256) +
-                   sinwaveX[wave[2][0]%256] / (wave[2][0]/256) +
-                   sawX[wave[3][0]%256] / (wave[3][0]/256));
+//        Drive_DAC( sinwaveX[wave[0][0]%256] / (1 + wave[0][0]/256));
+
     }
 }

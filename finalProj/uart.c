@@ -7,6 +7,7 @@
 
 #include "uart.h"
 #include "msp.h"
+#include "sound.h"
 
 void Setup_UART() {
     val = 0;
@@ -71,8 +72,25 @@ void UART_String(char * str, int len, int newline) {
 
 
 void EUSCIA0_IRQHandler(void) {
+    static int wave_num = 0;
     char c = EUSCI_A0->RXBUF;
-
+    switch (c) {
+        case 'a':
+            wave_num = (wave_num + 1);
+            break;
+        case 'b':
+            Update_Period(wave_num, 1);
+            break;
+        case 'c':
+            Update_Period(wave_num, -1);
+            break;
+        case 'd':
+            Update_Freq(wave_num, 1);
+            break;
+        case 'e':
+            Update_Freq(wave_num, 1);
+            break;
+    }
     if (c == '\r') {
         UART0Tx(c);
         c = '\n';

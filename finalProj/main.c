@@ -23,9 +23,10 @@ void main(void){
     CS->CTL1 = CS_CTL1_SELA_2 | CS_CTL1_SELS_3 | CS_CTL1_SELM_3; // select clock sources
     CS->KEY = 0; // lock the CS registers
 	
-    Setup_UART();
+    //Setup_UART();
     Setup_DAC();
 
+    __enable_irq();
     Sound_Init(0, 21, 3, 18);
 
     Sound_Go();
