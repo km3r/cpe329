@@ -9,7 +9,7 @@
 #define SOUND_H_
 
 #define SET_WAVE(num,freq,period) wave[num][1] = freq; wave[num][2] = period;
-#define NEXT_WAVE(num) wave[num][0] = ((wave[num][0] + wave[num][1] ) % (256 * wave[num][1]))
+#define NEXT_WAVE(num) wave[num][0] = ((wave[num][0] + wave[num][1] ) % (256 * wave[num][2]))
 
 int wave[4][3];
 

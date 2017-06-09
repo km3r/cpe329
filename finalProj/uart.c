@@ -76,7 +76,7 @@ void EUSCIA0_IRQHandler(void) {
     char c = EUSCI_A0->RXBUF;
     switch (c) {
         case 'a':
-            wave_num = (wave_num + 1);
+            wave_num = (wave_num + 1) % 3;
             break;
         case 'b':
             Update_Period(wave_num, 1);

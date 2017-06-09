@@ -57,12 +57,12 @@ void Sound_Init(int x1, int x2, int x3, int x4) {
     wave[2][0] = x3;
     wave[3][0] = x4;
     wave[0][1] = 1;
-    wave[1][1] = 3;
-    wave[2][1] = 4;
-    wave[3][1] = 5;
-    wave[0][2] = 2;
-    wave[1][2] = 4;
-    wave[2][2] = 6;
+    wave[1][1] = 2;
+    wave[2][1] = 3;
+    wave[3][1] = 4;
+    wave[0][2] = 12;
+    wave[1][2] = 14;
+    wave[2][2] = 16;
     wave[3][2] = 8;
 }
 
@@ -86,15 +86,16 @@ void Update_Wave(int waveNum, int freq, int period) {
 
 void Sound_Go() {
     int i = 0;
-    while (1) {
-        i++;
-        Drive_DAC(sinwaveX[i%256]);
+        //i++;
+        //Drive_DAC(sinwaveX[i%256]);
 
         NEXT_WAVE(0);
         NEXT_WAVE(1);
-        NEXT_WAVE(2);
+        if (wave[0][0] % 3 == 0) { NEXT_WAVE(2); }
         NEXT_WAVE(3);
-//        Drive_DAC( sinwaveX[wave[0][0]%256] / (1 + wave[0][0]/256));
+        Drive_DAC( sinwaveX[wave[0][0]%256] / (2 + wave[0][0]/256) +
+                   sinwaveX[wave[1][0]%256] / (2 + wave[1][0]/256) +
+                   sinwaveX[wave[2][0]%256] / (2 + wave[2][0]/256));
 
-    }
+
 }
